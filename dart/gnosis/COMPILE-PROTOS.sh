@@ -15,6 +15,8 @@
 
 export ANNOTATIONS="third_party/api-common-protos"
 
+mkdir -p lib/generated
+
 echo "Generating dart support code."
 protoc  \
 	/usr/include/google/protobuf/timestamp.proto \
