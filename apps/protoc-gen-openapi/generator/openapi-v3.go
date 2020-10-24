@@ -128,40 +128,56 @@ func (g *OpenAPIv3Generator) addPathsToDocumentV3(d *v3.Document, file *protogen
 			outputMessage := method.Output
 			operationID := service.GoName + "_" + method.GoName
 			extension := proto.GetExtension(method.Desc.Options(), annotations.E_Http)
-			var path string
-			var methodName string
-			var body string
 			if extension != nil {
 				rule := extension.(*annotations.HttpRule)
-				body = rule.Body
-				switch pattern := rule.Pattern.(type) {
-				case *annotations.HttpRule_Get:
-					path = pattern.Get
-					methodName = "GET"
-				case *annotations.HttpRule_Post:
-					path = pattern.Post
-					methodName = "POST"
-				case *annotations.HttpRule_Put:
-					path = pattern.Put
-					methodName = "PUT"
-				case *annotations.HttpRule_Delete:
-					path = pattern.Delete
-					methodName = "DELETE"
-				case *annotations.HttpRule_Patch:
-					path = pattern.Patch
-					methodName = "PATCH"
-				case *annotations.HttpRule_Custom:
-					path = "custom-unsupported"
-				default:
-					path = "unknown-unsupported"
+				g.addOperationForRule(d, 0, rule, file, operationID, comment, inputMessage, outputMessage)
+				for i, additional := range rule.AdditionalBindings {
+					g.addOperationForRule(d, i+1, additional, file, operationID, comment, inputMessage, outputMessage)
 				}
 			}
-			if methodName != "" {
-				op, path2 := g.buildOperationV3(
-					file, operationID, comment, path, body, inputMessage, outputMessage)
-				g.addOperationV3(d, op, path2, methodName)
-			}
 		}
+	}
+}
+
+func (g *OpenAPIv3Generator) addOperationForRule(
+	d *v3.Document,
+	i int,
+	rule *annotations.HttpRule,
+	file *protogen.File,
+	operationID string,
+	comment string,
+	inputMessage *protogen.Message,
+	outputMessage *protogen.Message,
+) {
+	var body, path, methodName string
+	body = rule.Body
+	switch pattern := rule.Pattern.(type) {
+	case *annotations.HttpRule_Get:
+		path = pattern.Get
+		methodName = "GET"
+	case *annotations.HttpRule_Post:
+		path = pattern.Post
+		methodName = "POST"
+	case *annotations.HttpRule_Put:
+		path = pattern.Put
+		methodName = "PUT"
+	case *annotations.HttpRule_Delete:
+		path = pattern.Delete
+		methodName = "DELETE"
+	case *annotations.HttpRule_Patch:
+		path = pattern.Patch
+		methodName = "PATCH"
+	case *annotations.HttpRule_Custom:
+		path = "custom-unsupported"
+	default:
+		path = "unknown-unsupported"
+	}
+	if methodName != "" {
+		if i > 0 {
+			operationID = fmt.Sprintf("%s_%d", operationID, i)
+		}
+		op, path2 := g.buildOperationV3(file, operationID, comment, path, body, inputMessage, outputMessage)
+		g.addOperationV3(d, op, path2, methodName)
 	}
 }
 
