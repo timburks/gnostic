@@ -133,27 +133,29 @@ func (g *OpenAPIv3Generator) addPathsToDocumentV3(d *v3.Document, file *protogen
 			var body string
 			if extension != nil {
 				rule := extension.(*annotations.HttpRule)
-				body = rule.Body
-				switch pattern := rule.Pattern.(type) {
-				case *annotations.HttpRule_Get:
-					path = pattern.Get
-					methodName = "GET"
-				case *annotations.HttpRule_Post:
-					path = pattern.Post
-					methodName = "POST"
-				case *annotations.HttpRule_Put:
-					path = pattern.Put
-					methodName = "PUT"
-				case *annotations.HttpRule_Delete:
-					path = pattern.Delete
-					methodName = "DELETE"
-				case *annotations.HttpRule_Patch:
-					path = pattern.Patch
-					methodName = "PATCH"
-				case *annotations.HttpRule_Custom:
-					path = "custom-unsupported"
-				default:
-					path = "unknown-unsupported"
+				if rule != nil {
+					body = rule.Body
+					switch pattern := rule.Pattern.(type) {
+					case *annotations.HttpRule_Get:
+						path = pattern.Get
+						methodName = "GET"
+					case *annotations.HttpRule_Post:
+						path = pattern.Post
+						methodName = "POST"
+					case *annotations.HttpRule_Put:
+						path = pattern.Put
+						methodName = "PUT"
+					case *annotations.HttpRule_Delete:
+						path = pattern.Delete
+						methodName = "DELETE"
+					case *annotations.HttpRule_Patch:
+						path = pattern.Patch
+						methodName = "PATCH"
+					case *annotations.HttpRule_Custom:
+						path = "custom-unsupported"
+					default:
+						path = "unknown-unsupported"
+					}
 				}
 			}
 			if methodName != "" {
@@ -192,7 +194,7 @@ func (g *OpenAPIv3Generator) buildOperationV3(
 		parts := strings.Split(starredPath, "/")
 		// The starred path is assumed to be in the form "things/*/otherthings/*".
 		// We want to convert it to "things/{thing}/otherthings/{otherthing}".
-		for i := 0; i < len(parts); i += 2 {
+		for i := 0; i+1 < len(parts); i += 2 {
 			section := parts[i]
 			parameter := singular(section)
 			parts[i+1] = "{" + parameter + "}"
